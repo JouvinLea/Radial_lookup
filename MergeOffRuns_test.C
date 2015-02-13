@@ -176,23 +176,26 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
 
   //Define Zen Bands and histo names
   //Nband: donne le nombre de band en zenith
-  Int_t Nbands = 6;
-  double zen[Nbands];
+  Int_t Nzen=7;
+  Int_t Nbands = Nzen-1;
+  double zen[Nzen];
   zen[0] = 0.;
   zen[1] = 20.;
   zen[2] = 30.;
   zen[3] = 40.;
   zen[4] = 45.;
   zen[5] = 55.;
+  zen[6] = 90.;
   
-
-  Int_t Nbands_eff = 5;
-  double eff[Nbands_eff];
+  Int_t Neff=6;
+  Int_t Nbands_eff = Neff-1;
+  double eff[Neff];
   eff[0] = 0.;
   eff[1] = 20.;
   eff[2] = 40.;
   eff[3] = 60.;
   eff[4] = 80.;
+  eff[5] = 100.;
   
 
 
@@ -206,7 +209,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
   //histnames.push_back(std::string("Zen55_90deg"));
   
   
-  std::string radname = "RadialLookup_";
+  std::string radname = "RadialLookup";
   std::string radnameR = "RadialLookup_R"; 
 
   std::vector<std::vector<TH1F*> > hists;
@@ -228,28 +231,40 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
   }
   
   
-  /*TH1F *Nrun;
+  TH1F *Nrun;
   TH1F *Nevent;
   Nrun=new TH1F("Nrun_bin_zenith","Nrun_bin_zenith",6,0,6); 
   Nevent=new TH1F("Nevent_bin_zenith","Nrun_event_zenith",6,0,6);
   // Initializing Tables : 
   //loop sur les N bands en zenith et remplie les histogrammes qui ont le nom de radia_lookup+_nom de chaque band en zenith.
-  for (int itab=0;itab<Nbands;itab++) 
+  for (int izen=0;izen<Nbands;izen++) 
     {
+      for (int ieff=0;ieff<Nbands_eff;ieff++) {
       std::string tabname;
       std::string tabnameR;
-      
-      tabname=radname+histnames.at(itab);
-      tabnameR=radnameR+histnames.at(itab);
+      std::string zenmin, zenmax, effmin, effmax;
+      ostringstream str_convert1, str_convert2 ,str_convert3, str_convert4;
+      str_convert1 << zen[izen];
+      zenmin=str_convert1.str();
+      str_convert2 << zen[izen+1];
+      zenmax=str_convert2.str();
+      str_convert3 << eff[ieff];
+      effmin=str_convert3.str();
+      str_convert4 << eff[ieff+1];
+      effmax=str_convert4.str();
+	
+      tabname=radname+"_zen"+zenmin+"_"+zenmax+"deg_eff"+effmin+"_"+effmax;
+      tabnameR=radnameR+"_zen"+zenmin+"_"+zenmax+"deg_eff"+effmin+"_"+effmax;
       //hists et histsR c'est des vecteurs d'histogram de root. 
       //fEvtOffsetMax: defini au debut du program, donne l'offset max ici a 2.7
       //Pour chaque band vecteur donc chaque band de zenith cree un histos de 700 bins de O a fEvtOffsetMax**2:histogramme des theta**2
       //et un histogram de 250 bins de 0 a fEvtOffsetMax: histogram des theta
-      hists[itab] = new TH1F(tabname.c_str(),tabname.c_str(),700,0,TMath::Power(fEvtOffsetMax,2.));
-      histsR[itab] = new TH1F(tabnameR.c_str(),tabnameR.c_str(),250,0,fEvtOffsetMax);
+      hists[izen][ieff] = new TH1F(tabname.c_str(),tabname.c_str(),700,0,TMath::Power(fEvtOffsetMax,2.));
+      histsR[izen][ieff] = new TH1F(tabnameR.c_str(),tabnameR.c_str(),250,0,fEvtOffsetMax);
+      }
     }
   //Je pense que ca veut dire qu'il selectionne la methode du packman
-  TString bgmakername("PMBgMaker");
+  /*TString bgmakername("PMBgMaker");
   
   //Loop on runlist
   //fRunList: defini au debut du programme:vecteur d'entier
