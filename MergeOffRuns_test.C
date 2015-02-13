@@ -177,20 +177,22 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
   //Define Zen Bands and histo names
   //Nband: donne le nombre de band en zenith
   Int_t Nbands = 6;
-  double zen1 = 0.;
-  double zen2 = 20.;
-  double zen3 = 30.;
-  double zen4 = 40.;
-  double zen5 = 45.;
-  double zen6 = 55.;
+  double zen[Nbands];
+  zen[0] = 0.;
+  zen[1] = 20.;
+  zen[2] = 30.;
+  zen[3] = 40.;
+  zen[4] = 45.;
+  zen[5] = 55.;
   
 
   Int_t Nbands_eff = 5;
-  double eff1 = 0.;
-  double eff2 = 20.;
-  double eff3 = 40.;
-  double eff4 = 60.;
-  double eff5 = 80.;
+  double eff[Nbands_eff];
+  eff[0] = 0.;
+  eff[1] = 20.;
+  eff[2] = 40.;
+  eff[3] = 60.;
+  eff[4] = 80.;
   
 
 
