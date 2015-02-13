@@ -187,15 +187,14 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
   zen[5] = 55.;
   zen[6] = 90.;
   
-  Int_t Neff=6;
+  Int_t Neff=4;
   Int_t Nbands_eff = Neff-1;
   double eff[Neff];
   eff[0] = 0.;
-  eff[1] = 20.;
-  eff[2] = 40.;
-  eff[3] = 60.;
-  eff[4] = 80.;
-  eff[5] = 100.;
+  eff[1] = 30.;
+  eff[2] = 60.;
+  eff[3] = 100.;
+  
   
 
 
@@ -264,7 +263,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
       }
     }
   //Je pense que ca veut dire qu'il selectionne la methode du packman
-  /*TString bgmakername("PMBgMaker");
+  TString bgmakername("PMBgMaker");
   
   //Loop on runlist
   //fRunList: defini au debut du programme:vecteur d'entier
@@ -320,12 +319,12 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
       std::cout << "Zenith Angle : " << zenit  << " deg" << std::endl;
       int index = 0;
     
-      if((zenit) >= zen1 && (zenit) < zen2) index = 0;
-      else if((zenit) >= zen2 && (zenit) < zen3) index = 1;
-      else if((zenit) >= zen3 && (zenit) < zen4) index = 2;
-      else if((zenit) >= zen4 && (zenit) < zen5) index = 3;
-      else if((zenit) >= zen5 && (zenit) < zen6) index = 4;
-      else if((zenit) >= zen6) index = 5;
+      if((zenit) >= zen[0] && (zenit) < zen[1]) index = 0;
+      else if((zenit) >= zen[1] && (zenit) < zen[2]) index = 1;
+      else if((zenit) >= zen[2] && (zenit) < zen[3]) index = 2;
+      else if((zenit) >= zen[3] && (zenit) < zen[4]) index = 3;
+      else if((zenit) >= zen[4] && (zenit) < zen[5]) index = 4;
+      else if((zenit) >= zen[5]) index = 5;
       else 
 	{
 	  std::cout << " ERROR!" << std::endl;
@@ -368,7 +367,19 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
       treeinfo_muoneff->GetEntry(0);
       fMuonEff=fMuonEff*100.;
       
+      int index_eff = 0;
     
+      if((fMuonEff) >= eff[0] && (fMuonEff) < eff[1]) index_eff  = 0;
+      else if((fMuonEff) >= eff[1] && (fMuonEff) < eff[2]) index_eff  = 1;
+      else if((fMuonEff) >= eff[2] && (fMuonEff) < eff[3]) index_eff  = 2;
+      else if((fMuonEff) >= eff[3]) index_eff = 3;
+      else 
+	{
+	  std::cout << " ERROR!" << std::endl;
+	  continue;
+	}
+      std::cout << zenit << " " << index << endl;
+      std::cout << fMuonEff << " " << index_eff <<endl;
       // Fill histo.
       TH1F *fLookupEthresh = NULL;
       double offsetmax = 2.5;
@@ -399,8 +410,8 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
 	if ( (fOffEvtEnergy >= EnergieMin) && (fOffEvtEnergy < EnergieMax) && (fOffEvtOffset < fEvtOffsetMax ) && (fOffEvtEnergy >= ethresh) ) 
 	  {
 	    //la on rempli les deux vecteur d'histo quon avait cree precedment en offset**2 et offset de 700 et 250 bins et de valeur max fEvtOffsetMax**2 et fEvtOffsetMax* respectivement. index donne la bande en zenith dans laquelle on est, pour chaque histo de bande en zenoth, on rempli l'histogramme avec l'offset de chaque evenement. Donc pour chaque bande en zenith, on a pour les 750 ou 250 bandes offset defini pour les histo hists et histsR le nombre d evenement correspondant.On peut donc avoir les radial lookup
-	    hists[index]->Fill(fOffEvtOffset*fOffEvtOffset);
-	    histsR[index]->Fill(fOffEvtOffset);
+	    hists[index][index_eff]->Fill(fOffEvtOffset*fOffEvtOffset);
+	    histsR[index][index_eff]->Fill(fOffEvtOffset);
 	    std::cout << "Added the " << ievt << " Energy = " << fOffEvtEnergy << " Offset = " << fOffEvtOffset << " ethresh = " << ethresh << std::endl;
 	  }
       }
@@ -414,7 +425,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
     }
   
   
-  TString foutname(outname);
+  /*TString foutname(outname);
   foutname+="_";
   foutname+=Config;
   foutname+=".root";
