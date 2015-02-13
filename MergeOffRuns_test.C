@@ -184,31 +184,49 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
   double zen5 = 45.;
   double zen6 = 55.;
   
-  std::vector<std::string> histnames;
+
+  Int_t Nbands_eff = 5;
+  double eff1 = 0.;
+  double eff2 = 20.;
+  double eff3 = 40.;
+  double eff4 = 60.;
+  double eff5 = 80.;
+  
+
+
+  std::vector<std::vector<std::string> > histnames;
   histnames.clear();
-  histnames.push_back(std::string("Zen0_20deg"));
-  histnames.push_back(std::string("Zen20_30deg"));
-  histnames.push_back(std::string("Zen30_40deg"));
-  histnames.push_back(std::string("Zen40_45deg"));
-  histnames.push_back(std::string("Zen45_55deg"));
-  histnames.push_back(std::string("Zen55_90deg"));
+  //histnames.push_back(std::string("Zen0_20deg"));
+  //histnames.push_back(std::string("Zen20_30deg"));
+  //histnames.push_back(std::string("Zen30_40deg"));
+  //histnames.push_back(std::string("Zen40_45deg"));
+  //histnames.push_back(std::string("Zen45_55deg"));
+  //histnames.push_back(std::string("Zen55_90deg"));
+  
   
   std::string radname = "RadialLookup_";
   std::string radnameR = "RadialLookup_R"; 
 
-  std::vector<TH1F*> hists;
+  std::vector<std::vector<TH1F*> > hists;
+  std::vector<std::vector<TH1F*> > histsR;
+  std::vector<std::vector<TH1F*> > histssmooth;
+  std::vector<std::vector<TH1F*> > histsfit;
   hists.resize(Nbands);
-  
-  std::vector<TH1F*> histsR;
   histsR.resize(Nbands);
-  
-  std::vector<TH1F*> histssmooth;
   histssmooth.resize(Nbands);
-  
-  std::vector<TH1F*> histsfit;
   histsfit.resize(Nbands);
   
-  TH1F *Nrun;
+  for (int i_zen=0;i_zen<Nbands;i_zen++){
+
+    hists[i_zen].resize(Nbands_eff);
+    histsR[i_zen].resize(Nbands_eff);
+    histssmooth[i_zen].resize(Nbands_eff);
+    histsfit[i_zen].resize(Nbands_eff);
+
+  }
+  
+  
+  /*TH1F *Nrun;
   TH1F *Nevent;
   Nrun=new TH1F("Nrun_bin_zenith","Nrun_bin_zenith",6,0,6); 
   Nevent=new TH1F("Nevent_bin_zenith","Nrun_event_zenith",6,0,6);
@@ -528,7 +546,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
   Nrun->Write();
   Nevent->Write();
   out->Close();
-  delete out;
+  delete out;*/
  
   
 }
