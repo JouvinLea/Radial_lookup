@@ -197,7 +197,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
   eff[3] = 100.;
 
   TNtuple distrib_zenith("distrib_zenith", "distribution des zenith des runs", "zenith");
-  TNtuple distrib_eff("dsitrib_efficacite", "distribution des efficacite des runs", "efficacite");
+  TNtuple distrib_eff("distrib_efficacite", "distribution des efficacite des runs", "efficacite");
   TNtuple distrib_energy("distrib_energy", "distribution des energy des evenements", "energy");
   
 
@@ -234,10 +234,14 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
   }
   
   
-  TH1F *Nrun;
-  TH1F *Nevent;
-  Nrun=new TH1F("Nrun_bin_zenith","Nrun_bin_zenith",6,0,6); 
-  Nevent=new TH1F("Nevent_bin_zenith","Nrun_event_zenith",6,0,6);
+  TH1F *Nrun_zenith;
+  TH1F *Nevent_zenith;
+  Nrun_zenith=new TH1F("Nrun_bin_zenith","Nrun_bin_zenith",6,0,6); 
+  Nevent_zenith=new TH1F("Nevent_bin_zenith","Nrun_event_zenith",6,0,6);
+  TH1F *Nrun_eff;
+  TH1F *Nevent_eff;
+  Nrun_eff=new TH1F("Nrun_bin_efficacite","Nrun_bin_efficacite",3,0,3); 
+  Nevent_eff=new TH1F("Nevent_bin_efficacite","Nrun_event_efficacite",3,0,3);
   // Initializing Tables : 
   //loop sur les N bands en zenith et remplie les histogrammes qui ont le nom de radia_lookup+_nom de chaque band en zenith.
   for (int izen=0;izen<Nbands;izen++) 
@@ -334,8 +338,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
 	  std::cout << " ERROR!" << std::endl;
 	  continue;
 	}
-      distrib_zenith.Fill(zenit);
-      Nrun->Fill(index);
+      
       //take each events, read leaves the and project it in a file
       // la lis les deux TTree present dans le TFile de nom RunInfoTree et EventsTree_BgMakerOff et les recupere avec get
       TTree *treeinfo = NULL;
@@ -375,14 +378,16 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
     
       if((fMuonEff) >= eff[0] && (fMuonEff) < eff[1]) index_eff  = 0;
       else if((fMuonEff) >= eff[1] && (fMuonEff) < eff[2]) index_eff  = 1;
-      else if((fMuonEff) >= eff[2] && (fMuonEff) < eff[3]) index_eff  = 2;
-      else if((fMuonEff) >= eff[3]) index_eff = 3;
+      else if((fMuonEff) >= eff[2]) index_eff = 2;
       else 
 	{
 	  std::cout << " ERROR!" << std::endl;
 	  continue;
 	}
+      distrib_zenith.Fill(zenit);
+      Nrun_zenith->Fill(index);
       distrib_eff.Fill(fMuonEff);
+      Nrun_eff->Fill(index_eff);
       std::cout << zenit << " " << index << endl;
       std::cout << fMuonEff << " " << index_eff <<endl;
       // Fill histo.
@@ -403,7 +408,8 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
       //Loop over the events 
       for (Int_t ievt=0;ievt<treeoff->GetEntries();++ievt) 
       {
-	Nevent->Fill(index);
+	Nevent_zenith->Fill(index);
+	Nevent_eff->Fill(index_eff);
 	//Recupere pour chaque evenement energie et offset
 	treeoff_evtenergy->GetEntry(ievt);    
 	treeoff_evtoffset->GetEntry(ievt);
@@ -439,6 +445,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
   TCanvas *c2;
   TFile* out = new TFile(foutname,"recreate");
   out->cd();
+  std::string outnamebis(outname);
   for (int izen=0;izen<Nbands;izen++) 
     {
       for (int ieff=0;ieff<Nbands_eff;ieff++) {
@@ -450,8 +457,8 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
 	histsR[izen][ieff]->Write("",TObject::kOverwrite);
 	string name_canvas1;
 	string name_canvas2;
-	name_canvas1=outname+'_'+histname+".jpg";
-	name_canvas2=outname+'_'+histnameR+".jpg";
+	name_canvas1=outnamebis+"_"+histname+".jpg";
+	name_canvas2=outnamebis+"_"+histnameR+".jpg";
 	c1=new TCanvas("theta**2");
 	hists[izen][ieff]->Draw();
 	c1->SaveAs(name_canvas1.c_str());
@@ -602,9 +609,11 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
     }*/
   distrib_zenith.Write();
   distrib_eff.Write();
-  distrib_eff.Write();
-  Nrun->Write();
-  Nevent->Write();
+  distrib_energy.Write();
+  Nrun_zenith->Write();
+  Nevent_zenith->Write();
+  Nrun_eff->Write();
+  Nevent_eff->Write();
   out->Close();
   delete out;
  
