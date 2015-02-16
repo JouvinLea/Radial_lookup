@@ -28,6 +28,7 @@
 #include <TBranch.h>
 #include <TDirectory.h>
 #include <TKey.h>
+#include <TNtuple.h>
 
 //HESS
 #include "utilities/StringTools.hh"
@@ -194,7 +195,10 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
   eff[1] = 30.;
   eff[2] = 60.;
   eff[3] = 100.;
-  
+
+  TNtuple distrib_zenith("distrib_zenith", "distribution des zenith des runs", "zenith");
+  TNtuple distrib_eff("dsitrib_efficacite", "distribution des efficacite des runs", "efficacite");
+  TNtuple distrib_energy("distrib_energy", "distribution des energy des evenements", "energy");
   
 
 
@@ -213,19 +217,19 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
 
   std::vector<std::vector<TH1F*> > hists;
   std::vector<std::vector<TH1F*> > histsR;
-  std::vector<std::vector<TH1F*> > histssmooth;
-  std::vector<std::vector<TH1F*> > histsfit;
+  //std::vector<std::vector<TH1F*> > histssmooth;
+  //std::vector<std::vector<TH1F*> > histsfit;
   hists.resize(Nbands);
   histsR.resize(Nbands);
-  histssmooth.resize(Nbands);
-  histsfit.resize(Nbands);
+  //histssmooth.resize(Nbands);
+  //histsfit.resize(Nbands);
   
   for (int i_zen=0;i_zen<Nbands;i_zen++){
 
     hists[i_zen].resize(Nbands_eff);
     histsR[i_zen].resize(Nbands_eff);
-    histssmooth[i_zen].resize(Nbands_eff);
-    histsfit[i_zen].resize(Nbands_eff);
+    //histssmooth[i_zen].resize(Nbands_eff);
+    //histsfit[i_zen].resize(Nbands_eff);
 
   }
   
@@ -330,7 +334,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
 	  std::cout << " ERROR!" << std::endl;
 	  continue;
 	}
-
+      distrib_zenith.Fill(zenit);
       Nrun->Fill(index);
       //take each events, read leaves the and project it in a file
       // la lis les deux TTree present dans le TFile de nom RunInfoTree et EventsTree_BgMakerOff et les recupere avec get
@@ -378,6 +382,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
 	  std::cout << " ERROR!" << std::endl;
 	  continue;
 	}
+      distrib_eff.Fill(fMuonEff);
       std::cout << zenit << " " << index << endl;
       std::cout << fMuonEff << " " << index_eff <<endl;
       // Fill histo.
@@ -406,6 +411,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
 	//Given a point fOffEvtOffset, approximates the value via linear interpolation based on the two nearest bin centers. Du coup vu que precedement pour chaque offset on a cree une valeur du ethreshol, pour chaque offset des evenements il peut remonter en interpolant entre les deux bins les plus proches, la valeur du ethreshold correspondant
 	//seul truc je vois pas a quoi ca sert sachant qu'il a tout mis a zero avant dans l histo fLookupEthresh donc la valeur interpollé est aussi zero
 	double ethresh = fLookupEthresh->Interpolate(fOffEvtOffset);
+	distrib_energy.Fill(fOffEvtEnergy);
 	//fEvtOffsetMax mis a 2.7 et defini au debut du programme
 	if ( (fOffEvtEnergy >= EnergieMin) && (fOffEvtEnergy < EnergieMax) && (fOffEvtOffset < fEvtOffsetMax ) && (fOffEvtEnergy >= ethresh) ) 
 	  {
@@ -425,15 +431,38 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
     }
   
   
-  /*TString foutname(outname);
+  TString foutname(outname);
   foutname+="_";
   foutname+=Config;
   foutname+=".root";
-  
+  TCanvas *c1;
+  TCanvas *c2;
   TFile* out = new TFile(foutname,"recreate");
   out->cd();
-  
-  for(unsigned int index = 0; index < hists.size(); ++index){
+  for (int izen=0;izen<Nbands;izen++) 
+    {
+      for (int ieff=0;ieff<Nbands_eff;ieff++) {
+	string histname;
+	string histnameR;
+	histname=hists[izen][ieff]->GetName();
+	histnameR=histsR[izen][ieff]->GetName();
+	hists[izen][ieff]->Write("",TObject::kOverwrite);	
+	histsR[izen][ieff]->Write("",TObject::kOverwrite);
+	string name_canvas1;
+	string name_canvas2;
+	name_canvas1=outname+'_'+histname+".jpg";
+	name_canvas2=outname+'_'+histnameR+".jpg";
+	c1=new TCanvas("theta**2");
+	hists[izen][ieff]->Draw();
+	c1->SaveAs(name_canvas1.c_str());
+	c2=new TCanvas("theta");
+	histsR[izen][ieff]->Draw();
+	c2->SaveAs(name_canvas2.c_str());
+    }
+  }
+  delete c1;
+  delete c2;
+  /*for(unsigned int index = 0; index < hists.size(); ++index){
     std::cout << "########################## BEGINNING TO  TREAT THE BAND " << histnames.at(index) << " #######################################" << std::endl;
     if(hists[index]) {
       //hits est un vecteur d'histogram donc .at() est une fonction C++ qui retourne une reference de l'element a la position index. Contrairement a juste l'operateur [], at verifie que ca depapsee la limit de taille du vector.
@@ -570,11 +599,14 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
       }
      
     }
-  }
+    }*/
+  distrib_zenith.Write();
+  distrib_eff.Write();
+  distrib_eff.Write();
   Nrun->Write();
   Nevent->Write();
   out->Close();
-  delete out;*/
+  delete out;
  
   
 }
