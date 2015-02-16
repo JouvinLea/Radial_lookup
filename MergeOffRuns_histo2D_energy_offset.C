@@ -43,6 +43,8 @@ std::vector<unsigned int> fAllowedTelList;
 std::map<int, Stash::Coordinate> fObservationList; //!
 std::map<int, float> fObservationZenithList; //!
 double fEvtOffsetMax=2.7;
+double fEvtEnergyMax=150;
+double fEvtEnergyMin=0.2;
 
 std::string PmBgRunInfoTreeName = "PmBgRunInfoTree";
 
@@ -188,13 +190,13 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
   zen[5] = 55.;
   zen[6] = 90.;
   
-  Int_t Neff=4;
+  Int_t Neff=3;
   Int_t Nbands_eff = Neff-1;
   double eff[Neff];
   eff[0] = 50.;
-  eff[1] = 60.;
-  eff[2] = 65.;
-  eff[3] = 100.;
+  eff[1] = 65.;
+  eff[2] = 100.;
+  
 
   TNtuple distrib_zenith("distrib_zenith", "distribution des zenith des runs", "zenith");
   TNtuple distrib_eff("distrib_efficacite", "distribution des efficacite des runs", "efficacite");
@@ -212,11 +214,11 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
   //histnames.push_back(std::string("Zen55_90deg"));
   
   
-  std::string radname = "RadialLookup";
-  std::string radnameR = "RadialLookup_R"; 
+  std::string radname = "RadialLookup_2D";
+  std::string radnameR = "RadialLookup_R_2D"; 
 
-  std::vector<std::vector<TH1F*> > hists;
-  std::vector<std::vector<TH1F*> > histsR;
+  std::vector<std::vector<TH2F*> > hists;
+  std::vector<std::vector<TH2F*> > histsR;
   //std::vector<std::vector<TH1F*> > histssmooth;
   //std::vector<std::vector<TH1F*> > histsfit;
   hists.resize(Nbands);
@@ -240,10 +242,14 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
   Nevent_zenith=new TH1F("Nevent_bin_zenith","Nrun_event_zenith",6,0,6);
   TH1F *Nrun_eff;
   TH1F *Nevent_eff;
-  Nrun_eff=new TH1F("Nrun_bin_efficacite","Nrun_bin_efficacite",3,0,3); 
-  Nevent_eff=new TH1F("Nevent_bin_efficacite","Nrun_event_efficacite",3,0,3);
+  Nrun_eff=new TH1F("Nrun_bin_efficacite","Nrun_bin_efficacite",2,0,2); 
+  Nevent_eff=new TH1F("Nevent_bin_efficacite","Nrun_event_efficacite",2,0,2);
   // Initializing Tables : 
   //loop sur les N bands en zenith et remplie les histogrammes qui ont le nom de radia_lookup+_nom de chaque band en zenith.
+  //nre de bin en offset et energu pour les radial lookup
+  int Nbin_E=50;
+  int Nbin_off2=700;
+  int Nbin_off=250;
   for (int izen=0;izen<Nbands;izen++) 
     {
       for (int ieff=0;ieff<Nbands_eff;ieff++) {
@@ -266,8 +272,8 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
       //fEvtOffsetMax: defini au debut du program, donne l'offset max ici a 2.7
       //Pour chaque band vecteur donc chaque band de zenith cree un histos de 700 bins de O a fEvtOffsetMax**2:histogramme des theta**2
       //et un histogram de 250 bins de 0 a fEvtOffsetMax: histogram des theta
-      hists[izen][ieff] = new TH1F(tabname.c_str(),tabname.c_str(),700,0,TMath::Power(fEvtOffsetMax,2.));
-      histsR[izen][ieff] = new TH1F(tabnameR.c_str(),tabnameR.c_str(),250,0,fEvtOffsetMax);
+      hists[izen][ieff] = new TH2F(tabname.c_str(),tabname.c_str(),Nbin_E,log10(fEvtEnergyMin),log10(fEvtEnergyMax),Nbin_off2,0,TMath::Power(fEvtOffsetMax,2.));
+      histsR[izen][ieff] = new TH2F(tabnameR.c_str(),tabnameR.c_str(),Nbin_E,log10(fEvtEnergyMin),log10(fEvtEnergyMax),Nbin_off,0,fEvtOffsetMax);
       }
     }
   //Je pense que ca veut dire qu'il selectionne la methode du packman
@@ -345,8 +351,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
       treeinfo = (TTree*)filehandler->Get("RunInfoTree");
       TTree *treeoff = NULL;
       treeoff = (TTree*)filehandler->Get("EventsTree_BgMakerOff");
-      treeinfo->Print();
-      treeoff->Print();
+    
       if (!treeoff || !treeinfo) 
 	{
 	  std::cout << "Pb with the file !  " << std::endl;
@@ -378,8 +383,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
       int index_eff = 0;
     
       if((fMuonEff) >= eff[0] && (fMuonEff) < eff[1]) index_eff  = 0;
-      else if((fMuonEff) >= eff[1] && (fMuonEff) < eff[2]) index_eff  = 1;
-      else if((fMuonEff) >= eff[2]) index_eff = 2;
+      else if((fMuonEff) >= eff[1]) index_eff = 1;
       else 
 	{
 	  std::cout << " ERROR!" << std::endl;
@@ -398,7 +402,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
       fLookupEthresh = new TH1F("lookupethresh","lookupethresh",nbinoff,0.,offsetmax);
     
       //J'ai l'impression que la ca lui permet de remplir un histo de 250 bins de Ethreshold a zero partout
-       for (int il=1;il<=fLookupEthresh->GetNbinsX();++il) 
+      for (int il=1;il<=fLookupEthresh->GetNbinsX();++il) 
 	{	
 	  double myoff = fLookupEthresh->GetBinCenter(il);
 	  double ethresh = 0.;
@@ -423,8 +427,8 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
 	if ( (fOffEvtEnergy >= EnergieMin) && (fOffEvtEnergy < EnergieMax) && (fOffEvtOffset < fEvtOffsetMax ) && (fOffEvtEnergy >= ethresh) ) 
 	  {
 	    //la on rempli les deux vecteur d'histo quon avait cree precedment en offset**2 et offset de 700 et 250 bins et de valeur max fEvtOffsetMax**2 et fEvtOffsetMax* respectivement. index donne la bande en zenith dans laquelle on est, pour chaque histo de bande en zenoth, on rempli l'histogramme avec l'offset de chaque evenement. Donc pour chaque bande en zenith, on a pour les 750 ou 250 bandes offset defini pour les histo hists et histsR le nombre d evenement correspondant.On peut donc avoir les radial lookup
-	    hists[index][index_eff]->Fill(fOffEvtOffset*fOffEvtOffset);
-	    histsR[index][index_eff]->Fill(fOffEvtOffset);
+	    hists[index][index_eff]->Fill(log10(fOffEvtEnergy),fOffEvtOffset*fOffEvtOffset);
+	    histsR[index][index_eff]->Fill(log10(fOffEvtEnergy),fOffEvtOffset);
 	    std::cout << "Added the " << ievt << " Energy = " << fOffEvtEnergy << " Offset = " << fOffEvtOffset << " ethresh = " << ethresh << std::endl;
 	  }
       }
@@ -439,7 +443,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
   
   
   TString foutname(outname);
-  foutname+="_";
+  foutname+="2D_";
   foutname+=Config;
   foutname+=".root";
   TCanvas *c1;
@@ -460,11 +464,11 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
 	string name_canvas2;
 	name_canvas1=outnamebis+"_"+histname+".jpg";
 	name_canvas2=outnamebis+"_"+histnameR+".jpg";
-	c1=new TCanvas("theta**2");
-	hists[izen][ieff]->Draw();
+	c1=new TCanvas("theta**2/energy");
+	hists[izen][ieff]->Draw("colz");
 	c1->SaveAs(name_canvas1.c_str());
-	c2=new TCanvas("theta");
-	histsR[izen][ieff]->Draw();
+	c2=new TCanvas("theta/energy");
+	histsR[izen][ieff]->Draw("colz");
 	c2->SaveAs(name_canvas2.c_str());
     }
   }
