@@ -228,63 +228,78 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
   std::string radname = "RadialLookup";
   std::string radnameR = "RadialLookup_R"; 
 
-  std::vector<std::vector<TH1F*> > hists;
-  std::vector<std::vector<TH1F*> > histsR;
+  std::vector< std::vector<std::vector<TH1F*> > > hists;
+  std::vector < std::vector<std::vector<TH1F*> > > histsR;
+  std::vector<std::vector<TH1F*> > Nevents_E_band_zen_eff;
   //std::vector<std::vector<TH1F*> > histssmooth;
   //std::vector<std::vector<TH1F*> > histsfit;
   hists.resize(Nbands);
   histsR.resize(Nbands);
+  Nevents_E_band_zen_eff.resize(Nbands);
   //histssmooth.resize(Nbands);
   //histsfit.resize(Nbands);
   
   for (int i_zen=0;i_zen<Nbands;i_zen++){
-
+    Nevents_E_band_zen_eff[i_zen].resize(Nbands_eff);
     hists[i_zen].resize(Nbands_eff);
     histsR[i_zen].resize(Nbands_eff);
-    //histssmooth[i_zen].resize(Nbands_eff);
-    //histsfit[i_zen].resize(Nbands_eff);
-
+    for(int i_eff=0;i_eff<Nbands_eff;i_eff++) {
+      hists[i_zen][i_eff].resize(Nbands_E);
+      histsR[i_zen][i_eff].resize(Nbands_E);
+    }
   }
   
   
   TH1F *Nrun_zenith;
   TH1F *Nevent_zenith;
-  Nrun_zenith=new TH1F("Nrun_bin_zenith","Nrun_bin_zenith",6,0,6); 
-  Nevent_zenith=new TH1F("Nevent_bin_zenith","Nrun_event_zenith",6,0,6);
+  Nrun_zenith=new TH1F("Nrun_bin_zenith","Nrun_bin_zenith", Nbands,0, Nbands); 
+  Nevent_zenith=new TH1F("Nevent_bin_zenith","Nrun_event_zenith", Nbands,0, Nbands);
   TH1F *Nrun_eff;
   TH1F *Nevent_eff;
-  Nrun_eff=new TH1F("Nrun_bin_efficacite","Nrun_bin_efficacite",3,0,3); 
-  Nevent_eff=new TH1F("Nevent_bin_efficacite","Nrun_event_efficacite",3,0,3);
+  Nrun_eff=new TH1F("Nrun_bin_efficacite","Nrun_bin_efficacite", Nbands_eff,0,Nbands_eff); 
+  Nevent_eff=new TH1F("Nevent_bin_efficacite","Nrun_event_efficacite",Nbands_eff,0,Nbands_eff);
+  TH1F *Nevent_E;
+  Nevent_E=new TH1F("Nevent_bin_energy","Nrun_event_energy",Nbands_E,0,Nbands_E);
   // Initializing Tables : 
   //loop sur les N bands en zenith et remplie les histogrammes qui ont le nom de radia_lookup+_nom de chaque band en zenith.
   for (int izen=0;izen<Nbands;izen++) 
     {
-      for (int ieff=0;ieff<Nbands_eff;ieff++) {
-      std::string tabname;
-      std::string tabnameR;
-      std::string zenmin, zenmax, effmin, effmax;
-      ostringstream str_convert1, str_convert2 ,str_convert3, str_convert4;
-      str_convert1 << zen[izen];
-      zenmin=str_convert1.str();
-      str_convert2 << zen[izen+1];
-      zenmax=str_convert2.str();
-      str_convert3 << eff[ieff];
-      effmin=str_convert3.str();
-      str_convert4 << eff[ieff+1];
-      effmax=str_convert4.str();
-	
-      tabname=radname+"_zen"+zenmin+"_"+zenmax+"deg_eff"+effmin+"_"+effmax;
-      tabnameR=radnameR+"_zen"+zenmin+"_"+zenmax+"deg_eff"+effmin+"_"+effmax;
-      //hists et histsR c'est des vecteurs d'histogram de root. 
-      //fEvtOffsetMax: defini au debut du program, donne l'offset max ici a 2.7
-      //Pour chaque band vecteur donc chaque band de zenith cree un histos de 700 bins de O a fEvtOffsetMax**2:histogramme des theta**2
-      //et un histogram de 250 bins de 0 a fEvtOffsetMax: histogram des theta
-      hists[izen][ieff] = new TH1F(tabname.c_str(),tabname.c_str(),700,0,TMath::Power(fEvtOffsetMax,2.));
-      histsR[izen][ieff] = new TH1F(tabnameR.c_str(),tabnameR.c_str(),250,0,fEvtOffsetMax);
-      }
+      for (int ieff=0;ieff<Nbands_eff;ieff++) 
+	{
+	  std::string tabname;
+	  std::string tabnameR;
+	  std::string zenmin, zenmax, effmin, effmax;
+	  ostringstream str_convert1, str_convert2 ,str_convert3, str_convert4;
+	  str_convert1 << zen[izen];
+	  zenmin=str_convert1.str();
+	  str_convert2 << zen[izen+1];
+	  zenmax=str_convert2.str();
+	  str_convert3 << eff[ieff];
+	  effmin=str_convert3.str();
+	  str_convert4 << eff[ieff+1];
+	  effmax=str_convert4.str();
+	  std::string histoNeventE_2D_name="Nevent_bin_energy_zen"+zenmin+"_"+zenmax+"deg_eff"+effmin+"_"+effmax;
+	  Nevents_E_band_zen_eff[izen][ieff]=new TH1F(histoNeventE_2D_name.c_str(),histoNeventE_2D_name.c_str(),Nbands_E,0,Nbands_E);
+	  for (int i_E=0;i_E<Nbands_E;i_E++) 
+	    {
+	      std::string E_number;
+	      ostringstream str_convert5;
+	      str_convert5 << i_E;
+	      E_number=str_convert5.str();
+	      
+	      tabname=radname+"_zen"+zenmin+"_"+zenmax+"deg_eff"+effmin+"_"+effmax+"_BinE_"+E_number;
+	      tabnameR=radnameR+"_zen"+zenmin+"_"+zenmax+"deg_eff"+effmin+"_"+effmax+"_BinE_"+E_number;
+	    //hists et histsR c'est des vecteurs d'histogram de root. 
+	    //fEvtOffsetMax: defini au debut du program, donne l'offset max ici a 2.7
+	    //Pour chaque band vecteur donc chaque band de zenith cree un histos de 700 bins de O a fEvtOffsetMax**2:histogramme des theta**2
+	    //et un histogram de 250 bins de 0 a fEvtOffsetMax: histogram des theta
+	      hists[izen][ieff][i_E] = new TH1F(tabname.c_str(),tabname.c_str(),700,0,TMath::Power(fEvtOffsetMax,2.));
+	      histsR[izen][ieff][i_E] = new TH1F(tabnameR.c_str(),tabnameR.c_str(),250,0,fEvtOffsetMax);
+	    }
+	}
     }
   //Je pense que ca veut dire qu'il selectionne la methode du packman
-  TString bgmakername("PMBgMaker");
+  /*TString bgmakername("PMBgMaker");
   
   //Loop on runlist
   //fRunList: defini au debut du programme:vecteur d'entier
@@ -438,13 +453,16 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
 	  if(log10(fOffEvtEnergy)>E[ie] && log10(fOffEvtEnergy)<E[ie+1]){
 	    index_E=ie;
 	    std::cout << ie << " " << log10(fOffEvtEnergy) << endl;
+	    break;
 	       }
 	}
+	Nevent_E->Fill(index_E);
+	Nevents_E_band_zen_eff[izen][ieff]->Fill(index_E);
 	if ( (fOffEvtEnergy >= EnergieMin) && (fOffEvtEnergy < EnergieMax) && (fOffEvtOffset < fEvtOffsetMax ) && (fOffEvtEnergy >= ethresh) ) 
 	  {
 	    //la on rempli les deux vecteur d'histo quon avait cree precedment en offset**2 et offset de 700 et 250 bins et de valeur max fEvtOffsetMax**2 et fEvtOffsetMax* respectivement. index donne la bande en zenith dans laquelle on est, pour chaque histo de bande en zenoth, on rempli l'histogramme avec l'offset de chaque evenement. Donc pour chaque bande en zenith, on a pour les 750 ou 250 bandes offset defini pour les histo hists et histsR le nombre d evenement correspondant.On peut donc avoir les radial lookup
-	    hists[index][index_eff]->Fill(fOffEvtOffset*fOffEvtOffset);
-	    histsR[index][index_eff]->Fill(fOffEvtOffset);
+	    hists[index][index_eff][index_E]->Fill(fOffEvtOffset*fOffEvtOffset);
+	    histsR[index][index_eff][index_E]->Fill(fOffEvtOffset);
 	    std::cout << "Added the " << ievt << " Energy = " << fOffEvtEnergy << " Offset = " << fOffEvtOffset << " ethresh = " << ethresh << std::endl;
 	  }
       }
@@ -455,10 +473,26 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
       if (filehandler) delete filehandler;
       
       std::cout << "\033[1;32;40m" << "----------------> Run " << fRunList.at(irun) << " Sucessfully Added !  Total : " << ++ntotruns   << "\033[0m" << std::endl; 
+      }
+  
+  double statistic;
+  double threshold_stat=100;
+  for (int izen=0;izen<Nbands;izen++) 
+    {
+      for (int ieff=0;ieff<Nbands_eff;ieff++) 
+	{
+	  for (int i_E=0;i_E<Nbands_E;i_E++) 
+	    {
+	      //GetBincontent va de 1 a Nbre max bin, pas de 0 a Nbre max bin-1 c'est pour ca qu'on met i_E+1
+	      statistic=Nevents_E_band_zen_eff[izen][ieff]->GetBinContent(i_E+1)
+		if(statistic< threshold_stat){
+		  std::cout << "WARNING: not enough statistic in the zenithal band:"<< zen[izen]<< "-" << zen[izen+1] <<"degrees, efficacite band: " << eff[ieff] << "-" << eff[ieff] << " for the band in energy number "<< i_E<< ": E:"<< TMath::Power(10,E[i_E]) << "-" << TMath::Power(10,E[i_E+1]) << " TeV" << endl;
+		}
+
+	    }
+	}
     }
-  
-  
-  /*TString foutname(outname);
+  TString foutname(outname);
   foutname+="_";
   foutname+=Config;
   foutname+=".root";
@@ -469,25 +503,30 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
   std::string outnamebis(outname);
   for (int izen=0;izen<Nbands;izen++) 
     {
-      for (int ieff=0;ieff<Nbands_eff;ieff++) {
-	string histname;
-	string histnameR;
-	histname=hists[izen][ieff]->GetName();
-	histnameR=histsR[izen][ieff]->GetName();
-	hists[izen][ieff]->Write("",TObject::kOverwrite);	
-	histsR[izen][ieff]->Write("",TObject::kOverwrite);
-	string name_canvas1;
-	string name_canvas2;
-	name_canvas1=outnamebis+"_"+histname+".jpg";
-	name_canvas2=outnamebis+"_"+histnameR+".jpg";
-	c1=new TCanvas("theta**2");
-	hists[izen][ieff]->Draw();
-	c1->SaveAs(name_canvas1.c_str());
-	c2=new TCanvas("theta");
-	histsR[izen][ieff]->Draw();
-	c2->SaveAs(name_canvas2.c_str());
+      for (int ieff=0;ieff<Nbands_eff;ieff++) 
+	{
+	  Nevents_E_band_zen_eff[izen][ieff]->Write("",TObject::kOverwrite);
+	  for (int i_E=0;i_E<Nbands_E;i_E++) 
+	    {
+	      string histname;
+	      string histnameR;
+	      histname=hists[izen][ieff][i_E]->GetName();
+	      histnameR=histsR[izen][ieff][i_E]->GetName();
+	      hists[izen][ieff][i_E]->Write("",TObject::kOverwrite);	
+	      histsR[izen][ieff][i_E]->Write("",TObject::kOverwrite);
+	      string name_canvas1;
+	      string name_canvas2;
+	      name_canvas1=outnamebis+"_"+histname+".jpg";
+	      name_canvas2=outnamebis+"_"+histnameR+".jpg";
+	      c1=new TCanvas("theta**2");
+	      hists[izen][ieff][i_E]->Draw();
+	      c1->SaveAs(name_canvas1.c_str());
+	      c2=new TCanvas("theta");
+	      histsR[izen][ieff][i_E]->Draw();
+	      c2->SaveAs(name_canvas2.c_str());
+	    }   
+	}
     }
-  }
   delete c1;
   delete c2;
   distrib_zenith.Write();
@@ -497,9 +536,10 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
   Nevent_zenith->Write();
   Nrun_eff->Write();
   Nevent_eff->Write();
+  Nevent_E->Write();
   out->Close();
-  delete out;*/
- 
+  delete out;
+  */
   
 }
 
