@@ -299,7 +299,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
 	}
     }
   //Je pense que ca veut dire qu'il selectionne la methode du packman
-  /*TString bgmakername("PMBgMaker");
+  TString bgmakername("PMBgMaker");
   
   //Loop on runlist
   //fRunList: defini au debut du programme:vecteur d'entier
@@ -354,18 +354,18 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
       }           
       std::cout << "Zenith Angle : " << zenit  << " deg" << std::endl;
       int index = 0;
-    
-      if((zenit) >= zen[0] && (zenit) < zen[1]) index = 0;
-      else if((zenit) >= zen[1] && (zenit) < zen[2]) index = 1;
-      else if((zenit) >= zen[2] && (zenit) < zen[3]) index = 2;
-      else if((zenit) >= zen[3] && (zenit) < zen[4]) index = 3;
-      else if((zenit) >= zen[4] && (zenit) < zen[5]) index = 4;
-      else if((zenit) >= zen[5]) index = 5;
-      else 
-	{
-	  std::cout << " ERROR!" << std::endl;
-	  continue;
-	}
+      for(int izen=0; izen<Nbands;izen++){
+	if(zenit>zen[izen] && zenit<zen[izen+1]){
+	    index=izen;
+	    std::cout << izen << " " << zenit << endl;
+	    break;
+	  }
+	  else if(zenit>zen[Nbands]){
+	    std::cout << " zenith superieur a zenith max" << std::endl;
+	    break;
+	  }
+      }
+      
       
       //take each events, read leaves the and project it in a file
       // la lis les deux TTree present dans le TFile de nom RunInfoTree et EventsTree_BgMakerOff et les recupere avec get
@@ -404,15 +404,17 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
       fMuonEff=fMuonEff*100.;
       
       int index_eff = 0;
-    
-      if((fMuonEff) >= eff[0] && (fMuonEff) < eff[1]) index_eff  = 0;
-      else if((fMuonEff) >= eff[1] && (fMuonEff) < eff[2]) index_eff  = 1;
-      else if((fMuonEff) >= eff[2]) index_eff = 2;
-      else 
-	{
-	  std::cout << " ERROR!" << std::endl;
-	  continue;
-	}
+      for(int ieff=0; ieff<Nbands_eff;ieff++){
+	if(fMuonEff>eff[ieff] && fMuonEff<eff[ieff]){
+	    index_eff=ieff;
+	    std::cout << ieff << " " << fMuonEff << endl;
+	    break;
+	  }
+	  else if(fMuonEff>eff[Nbands_eff]){
+	    std::cout << " efficacite superieur a efficacite max" << std::endl;
+	    break;
+	  }
+      }
       distrib_zenith.Fill(zenit);
       Nrun_zenith->Fill(index);
       distrib_eff.Fill(fMuonEff);
@@ -457,7 +459,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
 	       }
 	}
 	Nevent_E->Fill(index_E);
-	Nevents_E_band_zen_eff[izen][ieff]->Fill(index_E);
+	Nevents_E_band_zen_eff[index][index_eff]->Fill(index_E);
 	if ( (fOffEvtEnergy >= EnergieMin) && (fOffEvtEnergy < EnergieMax) && (fOffEvtOffset < fEvtOffsetMax ) && (fOffEvtEnergy >= ethresh) ) 
 	  {
 	    //la on rempli les deux vecteur d'histo quon avait cree precedment en offset**2 et offset de 700 et 250 bins et de valeur max fEvtOffsetMax**2 et fEvtOffsetMax* respectivement. index donne la bande en zenith dans laquelle on est, pour chaque histo de bande en zenoth, on rempli l'histogramme avec l'offset de chaque evenement. Donc pour chaque bande en zenith, on a pour les 750 ou 250 bandes offset defini pour les histo hists et histsR le nombre d evenement correspondant.On peut donc avoir les radial lookup
@@ -475,7 +477,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
       std::cout << "\033[1;32;40m" << "----------------> Run " << fRunList.at(irun) << " Sucessfully Added !  Total : " << ++ntotruns   << "\033[0m" << std::endl; 
       }
   
-  double statistic;
+  /*double statistic;
   double threshold_stat=100;
   for (int izen=0;izen<Nbands;izen++) 
     {
