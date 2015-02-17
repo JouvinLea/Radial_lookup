@@ -190,15 +190,20 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
   zen[5] = 55.;
   zen[6] = 90.;
   
-  Int_t Neff=4;
+  /*Int_t Neff=4;
   Int_t Nbands_eff = Neff-1;
   double eff[Neff];
   eff[0] = 50.;
   eff[1] = 60.;
   eff[2] = 65.;
-  eff[3] = 100.;
+  eff[3] = 100.;*/
+  Int_t Neff=2;
+  Int_t Nbands_eff = Neff-1;
+  double eff[Neff];
+  eff[0] = 0.;
+  eff[1] = 100.;
 
-  Int_t Nbands_E=16;
+  Int_t Nbands_E=5;
   double E[Nbands_E+1];
   Int_t Emax_bin=10;
   double bin_E=  (log10(Emax_bin)-log10(fEvtEnergyMin))/(Nbands_E-1);
@@ -477,8 +482,8 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
       std::cout << "\033[1;32;40m" << "----------------> Run " << fRunList.at(irun) << " Sucessfully Added !  Total : " << ++ntotruns   << "\033[0m" << std::endl; 
       }
   
-  /*double statistic;
-  double threshold_stat=100;
+  double statistic;
+  double threshold_stat=50;
   for (int izen=0;izen<Nbands;izen++) 
     {
       for (int ieff=0;ieff<Nbands_eff;ieff++) 
@@ -486,9 +491,9 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
 	  for (int i_E=0;i_E<Nbands_E;i_E++) 
 	    {
 	      //GetBincontent va de 1 a Nbre max bin, pas de 0 a Nbre max bin-1 c'est pour ca qu'on met i_E+1
-	      statistic=Nevents_E_band_zen_eff[izen][ieff]->GetBinContent(i_E+1)
+	      statistic=Nevents_E_band_zen_eff[izen][ieff]->GetBinContent(i_E+1);
 		if(statistic< threshold_stat){
-		  std::cout << "WARNING: not enough statistic in the zenithal band:"<< zen[izen]<< "-" << zen[izen+1] <<"degrees, efficacite band: " << eff[ieff] << "-" << eff[ieff] << " for the band in energy number "<< i_E<< ": E:"<< TMath::Power(10,E[i_E]) << "-" << TMath::Power(10,E[i_E+1]) << " TeV" << endl;
+		  std::cout << "WARNING: not enough statistic in the zenithal band:"<< zen[izen]<< "-" << zen[izen+1] <<"degrees, efficacite band: " << eff[ieff] << "-" << eff[ieff+1] << " for the band in energy number "<< i_E<< ": E:"<< TMath::Power(10,E[i_E]) << "-" << TMath::Power(10,E[i_E+1]) << " TeV" << endl;
 		}
 
 	    }
@@ -516,7 +521,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
 	      histnameR=histsR[izen][ieff][i_E]->GetName();
 	      hists[izen][ieff][i_E]->Write("",TObject::kOverwrite);	
 	      histsR[izen][ieff][i_E]->Write("",TObject::kOverwrite);
-	      string name_canvas1;
+	      /*string name_canvas1;
 	      string name_canvas2;
 	      name_canvas1=outnamebis+"_"+histname+".jpg";
 	      name_canvas2=outnamebis+"_"+histnameR+".jpg";
@@ -525,7 +530,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
 	      c1->SaveAs(name_canvas1.c_str());
 	      c2=new TCanvas("theta");
 	      histsR[izen][ieff][i_E]->Draw();
-	      c2->SaveAs(name_canvas2.c_str());
+	      c2->SaveAs(name_canvas2.c_str());*/
 	    }   
 	}
     }
@@ -541,7 +546,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
   Nevent_E->Write();
   out->Close();
   delete out;
-  */
+  
   
 }
 
