@@ -177,7 +177,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
 
   //Define Zen Bands and histo names
   //Nband: donne le nombre de band en zenith
-  Int_t Nzen=7;
+  /*Int_t Nzen=7;
   Int_t Nbands = Nzen-1;
   double zen[Nzen];
   zen[0] = 0.;
@@ -186,15 +186,29 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
   zen[3] = 40.;
   zen[4] = 45.;
   zen[5] = 55.;
-  zen[6] = 90.;
+  zen[6] = 90.;*/
+  Int_t Nzen=8;
+  Int_t Nbands = Nzen-1;
+  double zen[Nzen];
+  zen[0] = 0.;
+  zen[1] = 10.;
+  zen[2] = 20.;
+  zen[3] = 30.;
+  zen[4] = 40.;
+  zen[5] = 45.;
+  zen[6] = 55.;
+  zen[7] = 90.;
   
-  Int_t Neff=4;
+  //Int_t Neff=4;
+  Int_t Neff=2;
   Int_t Nbands_eff = Neff-1;
   double eff[Neff];
-  eff[0] = 50.;
+  eff[0] = 0.;
+  eff[1] = 100.;
+  /*eff[0] = 50.;
   eff[1] = 60.;
   eff[2] = 65.;
-  eff[3] = 100.;
+  eff[3] = 100.;*/
 
   TNtuple distrib_zenith("distrib_zenith", "distribution des zenith des runs", "zenith");
   TNtuple distrib_eff("distrib_efficacite", "distribution des efficacite des runs", "efficacite");
@@ -236,12 +250,12 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
   
   TH1F *Nrun_zenith;
   TH1F *Nevent_zenith;
-  Nrun_zenith=new TH1F("Nrun_bin_zenith","Nrun_bin_zenith",6,0,6); 
-  Nevent_zenith=new TH1F("Nevent_bin_zenith","Nrun_event_zenith",6,0,6);
+  Nrun_zenith=new TH1F("Nrun_bin_zenith","Nrun_bin_zenith",Nbands,0,Nbands); 
+  Nevent_zenith=new TH1F("Nevent_bin_zenith","Nrun_event_zenith",Nbands,0,Nbands);
   TH1F *Nrun_eff;
   TH1F *Nevent_eff;
-  Nrun_eff=new TH1F("Nrun_bin_efficacite","Nrun_bin_efficacite",3,0,3); 
-  Nevent_eff=new TH1F("Nevent_bin_efficacite","Nrun_event_efficacite",3,0,3);
+  Nrun_eff=new TH1F("Nrun_bin_efficacite","Nrun_bin_efficacite",Nbands_eff,0,Nbands_eff); 
+  Nevent_eff=new TH1F("Nevent_bin_efficacite","Nrun_event_efficacite",Nbands_eff,0,Nbands_eff);
   // Initializing Tables : 
   //loop sur les N bands en zenith et remplie les histogrammes qui ont le nom de radia_lookup+_nom de chaque band en zenith.
   for (int izen=0;izen<Nbands;izen++) 
@@ -326,18 +340,19 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
       }           
       std::cout << "Zenith Angle : " << zenit  << " deg" << std::endl;
       int index = 0;
-    
-      if((zenit) >= zen[0] && (zenit) < zen[1]) index = 0;
-      else if((zenit) >= zen[1] && (zenit) < zen[2]) index = 1;
-      else if((zenit) >= zen[2] && (zenit) < zen[3]) index = 2;
-      else if((zenit) >= zen[3] && (zenit) < zen[4]) index = 3;
-      else if((zenit) >= zen[4] && (zenit) < zen[5]) index = 4;
-      else if((zenit) >= zen[5]) index = 5;
-      else 
-	{
-	  std::cout << " ERROR!" << std::endl;
-	  continue;
-	}
+      
+      for(int izen=0; izen<Nbands;izen++){
+	if(zenit>zen[izen] && zenit<zen[izen+1]){
+	    index=izen;
+	    std::cout << izen << " " << zenit << endl;
+	    break;
+	  }
+	  else if(zenit>zen[Nbands]){
+	    std::cout << " zenith superieur a zenith max" << std::endl;
+	    break;
+	  }
+      }
+      
       
       //take each events, read leaves the and project it in a file
       // la lis les deux TTree present dans le TFile de nom RunInfoTree et EventsTree_BgMakerOff et les recupere avec get
@@ -345,8 +360,6 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
       treeinfo = (TTree*)filehandler->Get("RunInfoTree");
       TTree *treeoff = NULL;
       treeoff = (TTree*)filehandler->Get("EventsTree_BgMakerOff");
-      treeinfo->Print();
-      treeoff->Print();
       if (!treeoff || !treeinfo) 
 	{
 	  std::cout << "Pb with the file !  " << std::endl;
@@ -376,15 +389,17 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
       fMuonEff=fMuonEff*100.;
       
       int index_eff = 0;
-    
-      if((fMuonEff) >= eff[0] && (fMuonEff) < eff[1]) index_eff  = 0;
-      else if((fMuonEff) >= eff[1] && (fMuonEff) < eff[2]) index_eff  = 1;
-      else if((fMuonEff) >= eff[2]) index_eff = 2;
-      else 
-	{
-	  std::cout << " ERROR!" << std::endl;
-	  continue;
-	}
+      for(int ieff=0; ieff<Nbands_eff;ieff++){
+	if(fMuonEff>eff[ieff] && fMuonEff<eff[ieff]){
+	    index_eff=ieff;
+	    std::cout << ieff << " " << fMuonEff << endl;
+	    break;
+	  }
+	  else if(fMuonEff>eff[Nbands_eff]){
+	    std::cout << " efficacite superieur a efficacite max" << std::endl;
+	    break;
+	  }
+      }
       distrib_zenith.Fill(zenit);
       Nrun_zenith->Fill(index);
       distrib_eff.Fill(fMuonEff);
