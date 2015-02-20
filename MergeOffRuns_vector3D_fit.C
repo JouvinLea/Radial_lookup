@@ -179,29 +179,28 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
 
   //Define Zen Bands and histo names
   //Nband: donne le nombre de band en zenith
-  Int_t Nzen=7;
+  Int_t Nzen=6;
   Int_t Nbands = Nzen-1;
   double zen[Nzen];
   zen[0] = 0.;
   zen[1] = 20.;
   zen[2] = 30.;
   zen[3] = 40.;
-  zen[4] = 45.;
-  zen[5] = 55.;
-  zen[6] = 90.;
+  zen[4] = 50.;
+  zen[5] = 90.;
   
-  /*Int_t Neff=4;
+  Int_t Neff=4;
   Int_t Nbands_eff = Neff-1;
   double eff[Neff];
   eff[0] = 30.;
-  eff[1] = 60.;
-  eff[2] = 80.;
-  eff[3] = 100.;*/
-  Int_t Neff=2;
+  eff[1] = 50.;
+  eff[2] = 70.;
+  eff[3] = 100.;
+  /*Int_t Neff=2;
   Int_t Nbands_eff = Neff-1;
   double eff[Neff];
   eff[0] = 0.;
-  eff[1] = 100.;
+  eff[1] = 100.;*/
 
   Int_t Nbands_E=50;
   double E[Nbands_E+1];
@@ -417,7 +416,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
       
       int index_eff = 0;
       for(int ieff=0; ieff<Nbands_eff;ieff++){
-	if(fMuonEff>eff[ieff] && fMuonEff<eff[ieff]){
+	if(fMuonEff>eff[ieff] && fMuonEff<eff[ieff+1]){
 	    index_eff=ieff;
 	    std::cout << ieff << " " << fMuonEff << endl;
 	    break;
@@ -624,7 +623,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
 		  fitfunc->SetNpx(700);
 		  histsfit[index][index_eff][index_E] = new TH1F(*((TH1F*)fitfunc->GetHistogram()));
 		  
-		  if (index==Nbands-1)
+		  /*if (index==Nbands-1)
 		    {
 		      histsfit[index][index_eff][index_E]->Scale(0);
 		      std::cout<<"----use previous fitted zenith part for this zenith part---------------------------"<<"\n";
@@ -635,7 +634,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
 			histsfit[index][index_eff][index_E]->Fill(xval,yval);
 		      }
 		      
-		    }
+		      }*/
 		  double scaling;
 		  
 		  if (index!=10) {

@@ -187,7 +187,14 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
   zen[4] = 45.;
   zen[5] = 55.;
   zen[6] = 90.;*/
-  Int_t Nzen=8;
+  /*Int_t Nzen=4;
+  Int_t Nbands = Nzen-1;
+  double zen[Nzen];
+  zen[0] = 0.;
+  zen[1] = 20.;
+  zen[2] = 40.;
+  zen[3] = 90.;*/
+  /*Int_t Nzen=7;
   Int_t Nbands = Nzen-1;
   double zen[Nzen];
   zen[0] = 0.;
@@ -195,16 +202,26 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
   zen[2] = 20.;
   zen[3] = 30.;
   zen[4] = 40.;
-  zen[5] = 45.;
-  zen[6] = 55.;
-  zen[7] = 90.;
+  zen[5] = 50.;
+  zen[6] = 90.;*/
+  Int_t Nzen=6;
+  Int_t Nbands = Nzen-1;
+  double zen[Nzen];
+  zen[0] = 0.;
+  zen[1] = 20.;
+  zen[2] = 30.;
+  zen[3] = 40.;
+  zen[4] = 50.;
+  zen[5] = 90.;
   
   //Int_t Neff=4;
-  Int_t Neff=2;
+  Int_t Neff=4;
   Int_t Nbands_eff = Neff-1;
   double eff[Neff];
-  eff[0] = 0.;
-  eff[1] = 100.;
+  eff[0] = 30.;
+  eff[1] = 50.;
+  eff[2] = 70.;
+  eff[3] = 100.;
   /*eff[0] = 50.;
   eff[1] = 60.;
   eff[2] = 65.;
@@ -390,15 +407,15 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
       
       int index_eff = 0;
       for(int ieff=0; ieff<Nbands_eff;ieff++){
-	if(fMuonEff>eff[ieff] && fMuonEff<eff[ieff]){
+	if(fMuonEff>eff[ieff] && fMuonEff<eff[ieff+1]){
 	    index_eff=ieff;
 	    std::cout << ieff << " " << fMuonEff << endl;
 	    break;
 	  }
-	  else if(fMuonEff>eff[Nbands_eff]){
-	    std::cout << " efficacite superieur a efficacite max" << std::endl;
-	    break;
-	  }
+	else if(fMuonEff>eff[Nbands_eff]){
+	  std::cout << " efficacite superieur a efficacite max" << std::endl;
+	  break;
+	}
       }
       distrib_zenith.Fill(zenit);
       Nrun_zenith->Fill(index);
@@ -485,144 +502,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
   }
   delete c1;
   delete c2;
-  /*for(unsigned int index = 0; index < hists.size(); ++index){
-    std::cout << "########################## BEGINNING TO  TREAT THE BAND " << histnames.at(index) << " #######################################" << std::endl;
-    if(hists[index]) {
-      //hits est un vecteur d'histogram donc .at() est une fonction C++ qui retourne une reference de l'element a la position index. Contrairement a juste l'operateur [], at verifie que ca depapsee la limit de taille du vector.
-      std::string histsmoothname = (hists.at(index))->GetName();
-      histsmoothname+="_Smooth";
-      
-      TH1F *histtmprb      =(TH1F*)hists[index]->Clone();
-      TH1F *histtmpfit     = (TH1F*)hists[index]->Clone();
-      TH1F *histtmpsm      = (TH1F*)histtmpfit->Rebin(5,"histtmpsm");
-      histssmooth.at(index) = histtmpsm;
-      
-      // VIM : Test : 
-      (histssmooth.at(index))->SetTitle(histsmoothname.c_str());
-      (histssmooth.at(index))->SetName(histsmoothname.c_str());
-      //comprend pas tres bien ce que ca fait la fonction Smooth?
-      (histssmooth.at(index))->Smooth(3);
-      
- 
-      //Rebinning and/or smoothing for the fit !!! BE CARREFULL !!!!!      
-      int RebinTotal=2; 
-      if (index<=4) {
-	
-	double minimum_bin = histtmprb->GetMinimum();
-	while (minimum_bin<20 && RebinTotal<=32) {
-	  histtmprb->Rebin(2);
-	  minimum_bin=histtmprb->GetMinimum();
-	  RebinTotal=RebinTotal*2;
-	}
-	RebinTotal=0.5*RebinTotal;
-	if (RebinTotal==1) {RebinTotal=2;}
-      }
-      if (index==5) {RebinTotal=64;}
-      std::cout<<"RebinTotal="<<RebinTotal<<"\n";
-      histtmpfit->Rebin(RebinTotal);
-     
-      //Rebinning histo per 10 -> for the fit 
-      TString pols[8];
-      
-      pols[0]="pol4";pols[1]="pol5";pols[2]="pol6";pols[3]="pol7";pols[4]="pol8";pols[5]="pol9";pols[6]="pol10";
-      pols[7]="pol11";
-      double DevMin=1;
-      int polmin=1;
-      double DevTest=0;
-      bool flag=0,flagTailP=0;
-      double DevMinTailP=1;
-      int polminTailP=1;
-      TVirtualFitter::Fitter(histtmpfit)->SetMaxIterations(20000);
-      if (index<=5) {
-	DevMin=1;
-	polmin=1;
-	DevTest=0;
-	for (int poltest=0;poltest<=7;poltest++) {
-	  TF1 *fitfunc = new TF1("mypol",pols[poltest],0.,TMath::Power(fEvtOffsetMax,2.));
-	  fitfunc->SetParameter(0,hists[index]->GetBinContent(1));
-	  histtmpfit->Fit("mypol","RINQ","",0.,TMath::Power(fEvtOffsetMax,2.));
-	  int NDF=fitfunc->GetNDF();
-	  double chi2=fitfunc->GetChisquare();
-	  DevTest=TMath::Abs((chi2/NDF)-1);
-	  fitfunc->SetNpx(700);
-	  std::cout<<"poltest  "<<pols[poltest]<<"  DevTest= "<<DevTest<<"NDF= "<<NDF<<" chi2 = "<< fitfunc->GetChisquare() <<"\t";
-	  double fitmin=fitfunc->GetMinimum();
-	  //double x_minimum=fitfunc->GetXaxis()->GetBinCenter(fitmin);
-	  // cout<<"x_mim=  "<<x_minimum<<"\n"; 
-	  int MinPos=histtmpfit->GetMinimumBin();
-
-	  int Nx=histtmpfit->GetNbinsX();
-          double MinPosVal=MinPos*2.7*2.7/Nx;
-
-	  if (DevTest<DevMin)
-	    {
-	      if (fitmin>=0 && NDF>1)
-		{ 		
-		  //	  if (x_minimum > 6.25) 
-		    {
-		      DevMin=DevTest;
-		      polmin=poltest;
-		      flag=1;
-		      std::cout<<"\n";
-		    }
-		}
-	    }
-	}
-	std::cout<<"polselect  "<<pols[polmin]<<"\n";
-	TF1 *fitfunc = new TF1("mypol",pols[polmin],0.,TMath::Power(fEvtOffsetMax,2.));
-	fitfunc->SetParameter(0,hists[index]->GetBinContent(1));
-	histtmpfit->Fit("mypol","RINQ","",0.,TMath::Power(fEvtOffsetMax,2.));
-	std::cout << "FITTING RESULTS FOR THE " << histnames.at(index) << " BANDS :" << std::endl; 
-	std::cout << "probfit = " << fitfunc->GetProb() << " chi2 = " << fitfunc->GetChisquare() << " ndf = " << fitfunc->GetNDF() << std::endl;
- 	std::cout << "before set 700 pix" << std::endl;
-	fitfunc->SetNpx(700);
-	histsfit[index] = new TH1F(*((TH1F*)fitfunc->GetHistogram()));
-
-	if (index==5)
-	  {
-	    histsfit[index]->Scale(0);
-	    std::cout<<"----use previous fitted zenith part for this zenith part---------------------------"<<"\n";
-	    
-	    for (int ient=0; ient<=histsfit[index-1]->GetNbinsX();ient++) {
-	      double yval=histsfit[index-1]->GetBinContent(ient);
-	      double xval=histsfit[index-1]->GetBinCenter(ient);
-	      histsfit[index]->Fill(xval,yval);
-	   }
-	    
-	  }
-	double scaling;
-	
-	if (index!=10) {
-	  scaling=hists[index]->GetSum()/ histsfit[index]->GetSum();
-	}
-
-	histsfit[index]->Scale(scaling);
-	double mxm=hists[index]->GetMaximum();
-	double mxmft=histsfit[index]->GetMaximum();
-	
-	std::cout<<"scaling  "<<scaling<<"\t"<<mxm<<"\t"<<mxmft<<"\n";
-	
-	std::cout << "After Getting Hist" << histsfit[index] << std::endl;
-	
-	std::string histsfitname = (hists.at(index))->GetName();
-	histsfitname+="_Fit";
-	
-	histsfit[index]->SetName(histsfitname.c_str());
-	histsfit[index]->SetTitle(histsfitname.c_str());
-	
-
-	
-	std::cout << "writting hists" << std::endl; 
-	(hists.at(index))->Write("",TObject::kOverwrite);
-	std::cout << "writting histssmooth" << std::endl; 
-	(histssmooth.at(index))->Write("",TObject::kOverwrite);
-	std::cout << "writting histsfit" << std::endl; 
-	(histsfit.at(index))->Write("",TObject::kOverwrite);	
-	(histsR.at(index))->Write("",TObject::kOverwrite);
-      }
-     
-    }
-    }*/
+  
   distrib_zenith.Write();
   distrib_eff.Write();
   distrib_energy.Write();

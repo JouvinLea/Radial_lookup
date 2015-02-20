@@ -44,7 +44,7 @@ std::map<int, Stash::Coordinate> fObservationList; //!
 std::map<int, float> fObservationZenithList; //!
 double fEvtOffsetMax=2.7;
 double fEvtEnergyMax=100;
-double fEvtEnergyMin=0.2;
+double fEvtEnergyMin=0.1;
 
 std::string PmBgRunInfoTreeName = "PmBgRunInfoTree";
 
@@ -183,19 +183,19 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
   Int_t Nbands = Nzen-1;
   double zen[Nzen];
   zen[0] = 0.;
-  zen[1] = 20.;
-  zen[2] = 30.;
-  zen[3] = 40.;
-  zen[4] = 45.;
-  zen[5] = 55.;
+  zen[1] = 10.;
+  zen[2] = 20.;
+  zen[3] = 30.;
+  zen[4] = 40.;
+  zen[5] = 50.;
   zen[6] = 90.;
   
   /*Int_t Neff=4;
   Int_t Nbands_eff = Neff-1;
   double eff[Neff];
-  eff[0] = 50.;
+  eff[0] = 30.;
   eff[1] = 60.;
-  eff[2] = 65.;
+  eff[2] = 80.;
   eff[3] = 100.;*/
   Int_t Neff=2;
   Int_t Nbands_eff = Neff-1;
@@ -203,7 +203,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
   eff[0] = 0.;
   eff[1] = 100.;
 
-  Int_t Nbands_E=5;
+  Int_t Nbands_E=50;
   double E[Nbands_E+1];
   Int_t Emax_bin=10;
   double bin_E=  (log10(Emax_bin)-log10(fEvtEnergyMin))/(Nbands_E-1);
@@ -410,7 +410,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
       
       int index_eff = 0;
       for(int ieff=0; ieff<Nbands_eff;ieff++){
-	if(fMuonEff>eff[ieff] && fMuonEff<eff[ieff]){
+	if(fMuonEff>eff[ieff] && fMuonEff<eff[ieff+1]){
 	    index_eff=ieff;
 	    std::cout << ieff << " " << fMuonEff << endl;
 	    break;
@@ -483,7 +483,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
       }
   
   double statistic;
-  double threshold_stat=50;
+  double threshold_stat=80;
   for (int izen=0;izen<Nbands;izen++) 
     {
       for (int ieff=0;ieff<Nbands_eff;ieff++) 
@@ -493,7 +493,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
 	      //GetBincontent va de 1 a Nbre max bin, pas de 0 a Nbre max bin-1 c'est pour ca qu'on met i_E+1
 	      statistic=Nevents_E_band_zen_eff[izen][ieff]->GetBinContent(i_E+1);
 		if(statistic< threshold_stat){
-		  std::cout << "WARNING: not enough statistic in the zenithal band:"<< zen[izen]<< "-" << zen[izen+1] <<"degrees, efficacite band: " << eff[ieff] << "-" << eff[ieff+1] << " for the band in energy number "<< i_E<< ": E:"<< TMath::Power(10,E[i_E]) << "-" << TMath::Power(10,E[i_E+1]) << " TeV" << endl;
+		  std::cout << "WARNING: statictic inferieur a" << threshold_stat << ": il y a" << statistic  << "evenements in the zenithal band:"<< zen[izen]<< "-" << zen[izen+1] <<"degrees, efficacite band: " << eff[ieff] << "-" << eff[ieff+1] << " for the band in energy number "<< i_E<< ": E:"<< TMath::Power(10,E[i_E]) << "-" << TMath::Power(10,E[i_E+1]) << " TeV" << endl;
 		}
 
 	    }

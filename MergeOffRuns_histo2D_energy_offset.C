@@ -247,7 +247,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
   // Initializing Tables : 
   //loop sur les N bands en zenith et remplie les histogrammes qui ont le nom de radia_lookup+_nom de chaque band en zenith.
   //nre de bin en offset et energu pour les radial lookup
-  int Nbin_E=50;
+  int Nbin_E=15;
   int Nbin_off2=700;
   int Nbin_off=250;
   for (int izen=0;izen<Nbands;izen++) 
