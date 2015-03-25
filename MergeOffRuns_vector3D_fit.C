@@ -324,8 +324,8 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
       std::cout << "\033[1;34;40m" << "---------------------------------Starting run :" << fRunList[irun] << "\033[0m" << std::endl;
       rootfilename+= "_"; 
       rootfilename+=Config; 
-      if (fAllowedTelList.at(irun)!=30) 
-	rootfilename+="_3Tel";
+      //if (fAllowedTelList.at(irun)!=30) 
+      //rootfilename+="_3Tel";
       rootfilename+=".root";
      
       //string.data: fname et rootfilename ont le meme content
@@ -483,8 +483,10 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
       std::cout << "Run " << fRunList[irun] << " index : " << index <<  " Total Added Run = " << ++ntotruns << std::endl;
       
       delete fLookupEthresh;
-      if (filehandler) delete filehandler;
-      
+      if (filehandler) {
+	filehandler.Close()
+	delete filehandler;
+      }
       std::cout << "\033[1;32;40m" << "----------------> Run " << fRunList.at(irun) << " Sucessfully Added !  Total : " << ++ntotruns   << "\033[0m" << std::endl; 
       }
   
@@ -586,7 +588,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
 		    DevTest=TMath::Abs((chi2/NDF)-1);
 		    //Dit que le nombre de point ou sera calculé les valeurs de la fonction c'est 700=nbre de barre de l'histogramme non rebinné. Il doit faire ca car ensuite il calcule le minimum de la fonction fitmin donc ce minimum est caculé entre 0 et 2.7**2 divisé en 700 intervalles
 		    fitfunc->SetNpx(700);
-		    std::cout<<"poltest  "<<pols[poltest]<<"  DevTest= "<<DevTest<<"NDF= "<<NDF<<" chi2 = "<< fitfunc->GetChisquare() <<"\t";
+		    std::cout<<"poltest  "<<pols[poltest]<<"  DevTest= "<<DevTest<<"NDF= "<<NDF<<" chi2 = "<< fitfunc->GetChisquare() << endl;;
 		    double fitmin=fitfunc->GetMinimum();
 		    //double x_minimum=fitfunc->GetXaxis()->GetBinCenter(fitmin);
 		    // cout<<"x_mim=  "<<x_minimum<<"\n"; 
@@ -603,6 +605,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
 			  { 		
 			    //	  if (x_minimum > 6.25) 
 			    {
+			      
 			      DevMin=DevTest;
 			      polmin=poltest;
 			      flag=1;
