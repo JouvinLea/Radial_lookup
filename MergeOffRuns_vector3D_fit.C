@@ -343,21 +343,52 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
 	}
       
       gROOT->cd();	      
-      std::string zenithhistname(bgmakername);
-      zenithhistname+="_Current_ZenithDistOn";
-      TH1F* hz = NULL;
-      // cree un histogramme hz avec un des histogrmme du filehander censé contenir les donnees d'un TTree. Il recupere l'histo du Bgmaker
-      //voir avec vincent ce qu'il contient ce truc zenithhistname.c_str()?
-      hz = (TH1F*)filehandler->Get(zenithhistname.c_str());
-      //SANITY CHECK
-      if (hz==NULL) {
-	std::cout  << "\033[1;31;40m" << "Can't find " << zenithhistname << " histogram in the root file, skipping it ! " << "\033[0m" << std::endl;
-	//il trouve pas l'histogramme du bgmaker dansc ce TTre donc la passe au run d'apres sur la boucle for avec le continue
-	continue;
-      }
-      float zenit=0;
-      zenit=hz->GetMean();
-      delete hz;
+      
+      
+      
+      //take each events, read leaves the and project it in a file
+      // la lis les deux TTree present dans le TFile de nom RunInfoTree et EventsTree_BgMakerOff et les recupere avec get
+      TTree *treeinfo = NULL;
+      treeinfo = (TTree*)filehandler->Get("RunInfoTree");
+      TTree *treeoff = NULL;
+      treeoff = (TTree*)filehandler->Get("EventsTree_BgMakerOff");
+      //treeinfo->Print();
+      //treeoff->Print();
+      if (!treeoff || !treeinfo) 
+	{
+	  std::cout << "Pb with the file !  " << std::endl;
+	  continue;
+	}
+      TBranch *treeinfo_alt  = NULL;
+      TBranch *treeinfo_muoneff  = NULL;
+      TBranch *treeoff_evtenergy = NULL;
+      TBranch *treeoff_evtoffset = NULL;
+      //recupere les branch des deux TTree precedent:1) recupere l efficacite du run, 2)recupere l energie et l offset de chaque evenement
+      treeinfo_muoneff  = treeinfo->GetBranch("fMuonEff");
+      treeinfo_alt  = treeinfo->GetBranch("fPointALT");
+      treeoff_evtenergy = treeoff->GetBranch("fEvtEnergy");
+      treeoff_evtoffset = treeoff->GetBranch("fEvtOffset");
+      
+      Double_t fAlt;
+      Double_t zenit;
+      Double_t fMuonEff;
+      Double_t fOffEvtEnergy;
+      Double_t fOffEvtOffset;
+      
+      //voir si ces lignes permettent de lier les valeurs dans lesTTRee et les doubles crees, si on modifie l'un on omodifie l'autre, je comprend pas a quoi ca sert.
+      // ca va lui servir juste en dessous dans la boucle sur les evenements, des qu'il va lire le TTree evenement par evenement avec GetEntry(iev), ca donnera la valeur lu de l'offset a fOffEvtOffset et la valeur lu de l'energy a fOffEvtEnergy
+      treeinfo_muoneff->SetAddress(&fMuonEff);
+      treeinfo_alt->SetAddress(&fAlt);
+      treeoff_evtenergy->SetAddress(&fOffEvtEnergy);    
+      treeoff_evtoffset->SetAddress(&fOffEvtOffset);
+     
+      // Je pense que premiere permet de recuperer efficacite du run et comme avec les lignes precedentes on l a relier a fMuonEff, fMuonEff=efficacité du run
+      treeinfo_alt->GetEntry(0);
+      zenit=90-fAlt;
+      treeinfo_muoneff->GetEntry(0);
+      fMuonEff=fMuonEff*100.;
+
+      
       //SANITY CHECK
       if (zenit>=65.) {
 	std::cout << "\033[1;31;40m" << "The zenith angle is " << zenit << " deg, we skip it ! " << "\033[0m" << std::endl; 
@@ -377,43 +408,6 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
 	  }
       }
       
-      
-      //take each events, read leaves the and project it in a file
-      // la lis les deux TTree present dans le TFile de nom RunInfoTree et EventsTree_BgMakerOff et les recupere avec get
-      TTree *treeinfo = NULL;
-      treeinfo = (TTree*)filehandler->Get("RunInfoTree");
-      TTree *treeoff = NULL;
-      treeoff = (TTree*)filehandler->Get("EventsTree_BgMakerOff");
-      treeinfo->Print();
-      treeoff->Print();
-      if (!treeoff || !treeinfo) 
-	{
-	  std::cout << "Pb with the file !  " << std::endl;
-	  continue;
-	}
-      
-      TBranch *treeinfo_muoneff  = NULL;
-      TBranch *treeoff_evtenergy = NULL;
-      TBranch *treeoff_evtoffset = NULL;
-      //recupere les branch des deux TTree precedent:1) recupere l efficacite du run, 2)recupere l energie et l offset de chaque evenement
-      treeinfo_muoneff  = treeinfo->GetBranch("fMuonEff");
-      treeoff_evtenergy = treeoff->GetBranch("fEvtEnergy");
-      treeoff_evtoffset = treeoff->GetBranch("fEvtOffset");
-      
-      Double_t fMuonEff;
-      Double_t fOffEvtEnergy;
-      Double_t fOffEvtOffset;
-      
-      //voir si ces lignes permettent de lier les valeurs dans lesTTRee et les doubles crees, si on modifie l'un on omodifie l'autre, je comprend pas a quoi ca sert.
-      // ca va lui servir juste en dessous dans la boucle sur les evenements, des qu'il va lire le TTree evenement par evenement avec GetEntry(iev), ca donnera la valeur lu de l'offset a fOffEvtOffset et la valeur lu de l'energy a fOffEvtEnergy
-      treeinfo_muoneff->SetAddress(&fMuonEff);
-      treeoff_evtenergy->SetAddress(&fOffEvtEnergy);    
-      treeoff_evtoffset->SetAddress(&fOffEvtOffset);
-     
-      // Je pense que premiere permet de recuperer efficacite du run et comme avec les lignes precedentes on l a relier a fMuonEff, fMuonEff=efficacité du run
-      treeinfo_muoneff->GetEntry(0);
-      fMuonEff=fMuonEff*100.;
-      
       int index_eff = 0;
       for(int ieff=0; ieff<Nbands_eff;ieff++){
 	if(fMuonEff>eff[ieff] && fMuonEff<eff[ieff+1]){
@@ -426,6 +420,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
 	    break;
 	  }
       }
+      
       distrib_zenith.Fill(zenit);
       Nrun_zenith->Fill(index);
       distrib_eff.Fill(fMuonEff);
@@ -484,7 +479,7 @@ void MergeOffRuns(const char* filename,TString path,TString Config,const char* o
       
       delete fLookupEthresh;
       if (filehandler) {
-	filehandler.Close()
+	filehandler->Close();
 	delete filehandler;
       }
       std::cout << "\033[1;32;40m" << "----------------> Run " << fRunList.at(irun) << " Sucessfully Added !  Total : " << ++ntotruns   << "\033[0m" << std::endl; 
